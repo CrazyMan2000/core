@@ -13,6 +13,7 @@ from homeassistant.components import (
     input_number,
     light,
     media_player,
+    remote,
     timer,
     vacuum,
 )
@@ -398,6 +399,8 @@ class AlexaPowerController(AlexaCapability):
             is_on = self.entity.state != climate.HVACMode.OFF
         elif self.entity.domain == fan.DOMAIN:
             is_on = self.entity.state == fan.STATE_ON
+        elif self.entity.domain == remote.DOMAIN:
+            is_on = self.entity.state == remote.STATE_ON
         elif self.entity.domain == vacuum.DOMAIN:
             is_on = self.entity.state == vacuum.STATE_CLEANING
         elif self.entity.domain == timer.DOMAIN:
@@ -1416,6 +1419,12 @@ class AlexaModeController(AlexaCapability):
             ):
                 return f"{cover.ATTR_POSITION}.{mode}"
 
+        # Remote activity
+        if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+            mode = self.entity.attributes.get(remote.ATTR_ACTIVITY, None)
+            if mode in self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST, None):
+                return f"{remote.DOMAIN}.{mode}"
+
         return None
 
     def configuration(self):
@@ -1476,6 +1485,13 @@ class AlexaModeController(AlexaCapability):
                 f"{cover.ATTR_POSITION}.custom",
                 ["Custom", AlexaGlobalCatalog.SETTING_PRESET],
             )
+            return self._resource.serialize_capability_resources()
+
+        # Remote Activity Resources
+        if self.instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+            self._resource = AlexaModeResource(["Input", "Activity"], False)
+            for activity in self.entity.attributes.get(remote.ATTR_ACTIVITY_LIST):
+                self._resource.add_mode(f"{remote.DOMAIN}.{activity}", [activity])
             return self._resource.serialize_capability_resources()
 
         return None

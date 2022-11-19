@@ -18,6 +18,7 @@ from homeassistant.components import (
     input_number,
     light,
     media_player,
+    remote,
     timer,
     vacuum,
 )
@@ -171,6 +172,8 @@ async def async_api_turn_on(
         )
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_PLAY
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_ON
 
     await hass.services.async_call(
         domain,
@@ -218,6 +221,8 @@ async def async_api_turn_off(
         )
         if not supported & power_features:
             service = media_player.SERVICE_MEDIA_STOP
+    elif domain == remote.DOMAIN:
+        service = remote.SERVICE_TURN_OFF
 
     await hass.services.async_call(
         domain,
@@ -1140,6 +1145,12 @@ async def async_api_set_mode(
             service = cover.SERVICE_OPEN_COVER
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER
+
+    # Remote Activity
+    elif instance == f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}":
+        activity = mode.split(".")[1]
+        if activity in entity.attributes.get(remote.ATTR_ACTIVITY_LIST):
+            service = remote.SERVICE_TURN_ON
 
     if not service:
         raise AlexaInvalidDirectiveError(DIRECTIVE_NOT_SUPPORTED)

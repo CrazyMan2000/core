@@ -22,6 +22,7 @@ from homeassistant.components import (
     light,
     lock,
     media_player,
+    remote,
     scene,
     script,
     sensor,
@@ -928,3 +929,20 @@ class CameraCapabilities(AlexaEntity):
             return False
 
         return True
+
+
+@ENTITY_ADAPTERS.register(remote.DOMAIN)
+class RemoteCapabilities(AlexaEntity):
+    """Class to represent Remote capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        yield AlexaModeController(
+            self.entity, instance=f"{remote.DOMAIN}.{remote.ATTR_ACTIVITY}"
+        )
+        yield AlexaPowerController(self.entity)
+        yield Alexa(self.entity)
